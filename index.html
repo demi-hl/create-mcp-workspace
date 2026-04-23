@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>create-mcp-workspace — Claude Code + qmd in 2 minutes</title>
+    <meta
+      name="description"
+      content="One-command bootstrap for Claude Code with on-device hybrid search. Zero config, no API keys, installs in under 2 minutes."
+    />
+    <meta property="og:title" content="create-mcp-workspace" />
+    <meta
+      property="og:description"
+      content="Claude Code + on-device search in 2 minutes. One curl | bash."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E⚡%3C/text%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --bg: #0b0d10;
+        --panel: #111418;
+        --border: #1e2329;
+        --fg: #e6e8eb;
+        --muted: #8b949e;
+        --accent: #a78bfa;
+        --accent-2: #22d3ee;
+        --green: #34d399;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      a { color: var(--accent-2); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      main { max-width: 820px; margin: 0 auto; padding: 5rem 1.5rem 6rem; }
+      header { margin-bottom: 3rem; }
+      .eyebrow { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; }
+      h1 { font-size: clamp(2.25rem, 5vw, 3.5rem); line-height: 1.05; margin: 0 0 1rem; letter-spacing: -0.02em; }
+      h1 .mono { font-family: var(--mono); color: var(--accent); }
+      h2 { font-size: 1.25rem; margin: 3rem 0 1rem; letter-spacing: -0.01em; }
+      .lede { font-size: 1.125rem; color: var(--muted); margin: 0 0 2rem; max-width: 580px; }
+
+      .install {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+      .install code { font-family: var(--mono); font-size: 0.95rem; flex: 1; overflow-x: auto; white-space: nowrap; padding: 0.25rem 0; }
+      .copy-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--fg);
+        font-family: var(--sans);
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.5rem 0.9rem;
+        border-radius: 8px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s ease;
+      }
+      .copy-btn:hover { background: var(--border); border-color: var(--muted); }
+      .copy-btn.copied { background: var(--green); color: #0a1f13; border-color: var(--green); }
+      .install-hint { font-size: 0.8rem; color: var(--muted); margin: 0 0 2rem 0.25rem; }
+
+      .steps { list-style: none; counter-reset: step; padding: 0; margin: 0 0 2rem; }
+      .steps li {
+        counter-increment: step;
+        position: relative;
+        padding: 0.65rem 0 0.65rem 2.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .steps li:last-child { border-bottom: none; }
+      .steps li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 0.65rem;
+        width: 1.75rem;
+        height: 1.75rem;
+        line-height: 1.75rem;
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 50%;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0 2rem;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem 1.1rem;
+      }
+      .card h3 { font-family: var(--mono); font-size: 0.9rem; margin: 0 0 0.4rem; color: var(--accent); letter-spacing: -0.01em; }
+      .card p { margin: 0; font-size: 0.9rem; color: var(--muted); }
+
+      pre { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; overflow-x: auto; font-family: var(--mono); font-size: 0.85rem; margin: 0 0 1rem; }
+      code.inline { font-family: var(--mono); font-size: 0.9em; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 0.1em 0.4em; }
+
+      .tabs { display: flex; gap: 0.25rem; margin-bottom: -1px; }
+      .tab-label {
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        padding: 0.5rem 0.9rem;
+        border: 1px solid var(--border);
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
+        color: var(--muted);
+        background: var(--bg);
+        cursor: pointer;
+        transition: color 0.15s;
+      }
+      .tab-label:hover { color: var(--fg); }
+      .tab-input { display: none; }
+      .tab-input:checked + .tab-label { color: var(--accent); background: var(--panel); border-bottom-color: var(--panel); }
+
+      footer { border-top: 1px solid var(--border); margin-top: 4rem; padding-top: 1.5rem; color: var(--muted); font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; }
+      footer .left { font-family: var(--mono); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">create-mcp-workspace</div>
+        <h1>Claude Code<br/>+ <span class="mono">qmd</span> in 2 minutes.</h1>
+        <p class="lede">
+          One command to set up Claude Code with Tobi Lütke's on-device hybrid
+          search over a local markdown workspace. Zero config, no API keys, no
+          MCP wiring. Built for operators who want to skip the basics.
+        </p>
+
+        <div class="install" aria-label="Install command">
+          <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/demi-hl/create-mcp-workspace/main/install.sh | bash</code>
+          <button class="copy-btn" id="copy-btn" aria-label="Copy install command">Copy</button>
+        </div>
+        <p class="install-hint">Paste in your terminal. macOS, Linux, or WSL.</p>
+      </header>
+
+      <h2>What gets installed</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Claude Code</h3>
+          <p>Anthropic's terminal-native AI coding agent.</p>
+        </div>
+        <div class="card">
+          <h3>qmd</h3>
+          <p>On-device BM25 + vector + LLM-rerank search over markdown. Auto-wires its own MCP.</p>
+        </div>
+        <div class="card">
+          <h3>~/claude-workspace</h3>
+          <p>Folder seeded with <code class="inline">CLAUDE.md</code>, <code class="inline">MEMORY.md</code>, and a first-session interview prompt.</p>
+        </div>
+      </div>
+
+      <h2>Before you run</h2>
+      <ol class="steps">
+        <li>
+          <strong>Node 18+</strong> — <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a>, or <code class="inline">brew install node</code>
+        </li>
+        <li>
+          <strong>Git</strong> — preinstalled on most systems
+        </li>
+        <li>
+          <strong>An Anthropic account</strong> — Claude Code prompts for login on first run
+        </li>
+      </ol>
+
+      <h2>After it finishes</h2>
+      <pre>cd ~/claude-workspace
+claude</pre>
+      <p>
+        Paste the <code class="inline">First Session Prompt</code> from your
+        new <code class="inline">CLAUDE.md</code>. Claude interviews you for
+        your role, projects, and preferences, and seeds memory so future
+        sessions know you.
+      </p>
+
+      <h2>Want more?</h2>
+      <p>
+        The minimal installer skips role-specific plugin packs, Obsidian
+        write-back, LanceDB, and recommended CLIs. For the full 10-step
+        configurator that sets those up interactively:
+      </p>
+      <pre>npx github:demi-hl/create-mcp-workspace</pre>
+      <p>
+        Or read
+        <a
+          href="https://github.com/demi-hl/create-mcp-workspace/blob/main/STACK.md"
+          target="_blank"
+          rel="noopener"
+          >STACK.md</a
+        >
+        for a tiered reference covering CLIs, essential plugins, role-based
+        packs, data imports, and workflow automation.
+      </p>
+
+      <footer>
+        <div class="left">create-mcp-workspace · MIT</div>
+        <div>
+          <a
+            href="https://github.com/demi-hl/create-mcp-workspace"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >
+          ·
+          <a
+            href="https://github.com/demi-hl/create-mcp-workspace/blob/main/STACK.md"
+            target="_blank"
+            rel="noopener"
+            >STACK</a
+          >
+          ·
+          <a href="https://github.com/tobi/qmd" target="_blank" rel="noopener">qmd</a>
+        </div>
+      </footer>
+    </main>
+
+    <script>
+      const btn = document.getElementById("copy-btn");
+      const cmd = document.getElementById("install-cmd");
+      btn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(cmd.textContent.trim());
+          btn.textContent = "Copied";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+          }, 1800);
+        } catch {
+          // Fallback for older browsers
+          const range = document.createRange();
+          range.selectNode(cmd);
+          getSelection().removeAllRanges();
+          getSelection().addRange(range);
+          document.execCommand("copy");
+          getSelection().removeAllRanges();
+          btn.textContent = "Copied";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+          }, 1800);
+        }
+      });
+    </script>
+  </body>
+</html>
