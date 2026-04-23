@@ -1,90 +1,86 @@
 # create-mcp-workspace
 
-One-command onboarding wrapper that takes a new user from zero to a working
-**Claude Code + Obsidian + qmd + LanceDB** setup with a seeded first prompt.
+**Claude Code + on-device search in under 2 minutes.**
 
-## What it installs
+One command to get a new operator productive with Claude Code and a local,
+AI-native knowledge workspace — no config files, no API keys, no drama.
 
-| Component | Source | Role |
-|-----------|--------|------|
-| `@anthropic-ai/claude-code` | npm | The Claude Code CLI |
-| `obsidian-mcp-server` | npm | MCP bridge to an Obsidian vault (needs Local REST API plugin) |
-| [`@tobilu/qmd`](https://github.com/tobi/qmd) | npm (published from github.com/tobi/qmd) | Local BM25 + vector + LLM-rerank search over markdown |
-| `qmd` Claude Code plugin | `tobi/qmd` marketplace | Tobi's native Claude Code plugin — wires qmd's MCP automatically |
-| `@iflow-mcp/lance-mcp` | npm | LanceDB vector store access via MCP |
+---
 
-It registers the obsidian and lancedb MCPs with Claude Code, installs
-Tobi's qmd plugin (which self-wires its MCP), seeds a PARA-layout Obsidian
-vault (if one doesn't exist), creates a qmd collection against the vault with
-a contextual description, and optionally generates semantic embeddings.
-
-## What it does NOT install
-
-- Obsidian itself (GUI app — download from obsidian.md)
-- Any OpenClaw / Codex / Cursor tooling
-- Homebrew or Node (prereqs; fails fast if missing)
-
-## Usage
-
-### Local (this repo)
+## Quick start (recommended)
 
 ```bash
-node onboarding/bin/create-mcp-workspace.mjs
+curl -fsSL https://raw.githubusercontent.com/demi-hl/create-mcp-workspace/main/install.sh | bash
 ```
 
-### Once published to npm
+That's it. The script:
+
+1. Checks that Node 18+, npm, and git are installed (fails fast if not)
+2. Installs `@anthropic-ai/claude-code` and `@tobilu/qmd`
+3. Installs Tobi Lütke's qmd plugin into Claude Code (auto-wires the MCP)
+4. Creates `~/claude-workspace/` with a seeded `CLAUDE.md` + `MEMORY.md`
+5. Registers a qmd search collection pointed at the workspace
+6. Prints the one line you need to run next
+
+## What you need first
+
+- **Node.js 18+** — [nodejs.org](https://nodejs.org) (Mac: `brew install node`)
+- **git** — usually preinstalled
+- **An Anthropic account** — Claude Code prompts for login on first run
+
+That's the full prerequisites list.
+
+## After install
 
 ```bash
-npx create-mcp-workspace
-# or
-npm create mcp-workspace
+cd ~/claude-workspace
+claude
 ```
 
-## 8-step flow
+On your first message to Claude, paste the "First Session Prompt" that the
+installer seeded into `CLAUDE.md`. It interviews you for your role, projects,
+and preferences, and seeds Claude's memory so future sessions know you.
 
-1. Prereq check (node, npm, git)
-2. Collect name, workspace path, vault path, install choices
-3. Create workspace + LanceDB + vault directories
-4. Install Claude Code CLI (if missing)
-5. Install qmd CLI + obsidian-mcp-server + lance-mcp via npm; install Tobi's qmd Claude Code plugin from the `tobi/qmd` marketplace
-6. Register the obsidian and lancedb MCPs with Claude Code (qmd's MCP is wired by its plugin automatically)
-7. Create a qmd collection against the vault, add contextual description, optionally run `qmd embed` to download embedding models and build the vector index
-8. Seed `CLAUDE.md`, `MEMORY.md`, `.env.example`, `welcome-prompt.md`, git init
+## Optional: add Obsidian
 
-## First session
+Obsidian is a great GUI for the workspace but **not required**. If you want
+it:
+
+1. Install Obsidian from [obsidian.md](https://obsidian.md)
+2. Open `~/claude-workspace` as a vault
+3. That's it — qmd already reads the markdown files; no MCP wiring needed
+
+For write-back-from-Claude capability (so Claude can create/edit notes in
+your vault through a structured API), add the Obsidian Local REST API plugin
+and wire the `obsidian-mcp-server` MCP. See [STACK.md](./STACK.md).
+
+## Power-user path
+
+The minimal installer keeps things simple. If you want role-based plugin
+packs, additional MCPs (LanceDB vector store, Obsidian write-back, etc.),
+recommended CLIs, and the full 10-step configurator, run:
 
 ```bash
-cd ~/mcp-workspace    # or whatever path you chose
-claude                   # start a Claude Code session
+npx github:demi-hl/create-mcp-workspace
 ```
 
-Then paste `welcome-prompt.md` as your first message. That prompt orients
-Claude to the available MCPs and runs a short interview to seed the memory
-system with the operator's profile, projects, and preferences — so by the end
-of session one, memory is populated and the workspace is functional.
+This runs the full Node wrapper in `bin/create-mcp-workspace.mjs`.
 
-## Obsidian API key (one-time manual step)
+## What's on the roadmap
 
-The Obsidian MCP needs the **Local REST API** community plugin:
+See [STACK.md](./STACK.md) for the tiered reference:
 
-1. Obsidian → Settings → Community plugins → Browse
-2. Search "Local REST API" → install → enable
-3. Copy the generated API key
-4. Paste into your environment:
-   ```bash
-   echo 'export OBSIDIAN_API_KEY="paste-key-here"' >> ~/.zshrc
-   source ~/.zshrc
-   ```
+- Tier 0: minimum stack (what `install.sh` sets up)
+- Tier 1: universal CLIs worth adding (gh, ripgrep, fd, jq, fzf, tmux, ollama)
+- Tier 2: essential Claude Code plugins
+- Tier 3: role-based plugin packs (engineer, designer, product, data, etc.)
+- Tier 4: data imports (ChatGPT / Gemini export migration)
+- Tier 5: workflow automation (hooks, scheduled tasks, slash commands)
+- Tier 6: optional extras (local Ollama models, editor integrations)
 
-The installer prints this reminder at the end.
+## Contributing / license
 
-## Design notes
+MIT — fork, modify, redistribute freely.
 
-- **Zero dependencies** — pure Node stdlib (`readline`, `child_process`, `fs`,
-  `path`, `os`). Runs via `node` directly or `npx` when published.
-- **Idempotent** — re-running removes and re-adds MCP registrations, never
-  duplicates them.
-- **Single workspace dir** — everything user-facing lives under one path.
-  Easy to back up, easy to wipe, easy to hand off.
-- **PARA layout** — starter vault uses Projects / Areas / Resources / Daily /
-  Imports so the operator can pick up standard organizational patterns.
+Issues and PRs welcome at
+[github.com/demi-hl/create-mcp-workspace](https://github.com/demi-hl/create-mcp-workspace).
