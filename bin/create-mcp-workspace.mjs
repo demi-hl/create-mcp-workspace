@@ -61,14 +61,29 @@ const ROLE_PACKS = {
 const ROLE_KEYS = Object.keys(ROLE_PACKS);
 
 const rl = createInterface({ input: stdin, output: stdout });
+// If stdin closes mid-question (e.g. piped EOF), surface it cleanly instead
+// of letting rl.question() hang silently.
+let stdinClosed = false;
+rl.on("close", () => {
+  stdinClosed = true;
+});
+const safeQuestion = async (prompt) => {
+  if (stdinClosed) return "";
+  try {
+    const answer = await rl.question(prompt);
+    return typeof answer === "string" ? answer : "";
+  } catch {
+    return "";
+  }
+};
 const ask = async (q, def) => {
   const suffix = def ? ` ${C.dim}(${def})${C.r}` : "";
-  const a = (await rl.question(`${q}${suffix}: `)).trim();
+  const a = (await safeQuestion(`${q}${suffix}: `)).trim();
   return a || def || "";
 };
 const confirm = async (q, defYes = true) => {
   const hint = defYes ? "Y/n" : "y/N";
-  const a = (await rl.question(`${q} ${C.dim}[${hint}]${C.r} `))
+  const a = (await safeQuestion(`${q} ${C.dim}[${hint}]${C.r} `))
     .trim()
     .toLowerCase();
   if (!a) return defYes;
