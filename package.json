@@ -1,0 +1,42 @@
+{
+  "name": "create-mcp-workspace",
+  "version": "0.1.0",
+  "description": "One-command bootstrap for a Claude Code workspace with Obsidian, qmd, and LanceDB MCPs pre-wired, plus role-based plugin packs",
+  "type": "module",
+  "bin": {
+    "create-mcp-workspace": "bin/create-mcp-workspace.mjs"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "STACK.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "author": "demigodzx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/demi-hl/create-mcp-workspace.git"
+  },
+  "bugs": {
+    "url": "https://github.com/demi-hl/create-mcp-workspace/issues"
+  },
+  "homepage": "https://github.com/demi-hl/create-mcp-workspace#readme",
+  "keywords": [
+    "claude-code",
+    "mcp",
+    "obsidian",
+    "lancedb",
+    "qmd",
+    "onboarding",
+    "knowledge-base",
+    "bootstrap",
+    "scaffold"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
